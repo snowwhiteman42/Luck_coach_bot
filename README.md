@@ -1,13 +1,14 @@
 # Luck Bot
 
-A Telegram bot that tests your luck over 10 rounds. Each round the bot picks a random number between 1 and 10 — you guess, and your Luck Score reflects how close you were.
+A Telegram bot that tests your luck over 10 rounds. Each round the bot picks a random number between 1 and 10 — you guess, and your Luck Score reflects how close you were. Stats are saved locally so you can track your progress over time.
 
 ## How it works
 
 - 10 rounds per game
 - Each round: bot picks a secret number (1–10), you tap your guess
 - After each guess: the secret is revealed and your round score shown
-- Final summary: exact matches, average Luck Score, full history
+- Game over: exact matches, average Luck Score, and personal best comparison
+- `/stats`: your full history — today, this week, this month, all-time, trend
 
 **Scoring:** `(1 - |guess - secret| / 9) × 100%` — consistent and fair across all rounds.
 
@@ -47,8 +48,20 @@ Then open Telegram and send `/start` to your bot.
 
 | Command | Description |
 |---------|-------------|
-| `/start` | Start a new game |
+| `/start` | Start a new 10-round game |
+| `/stats` | View your stats: today / week / month / all-time + trend |
 | `/cancel` | Cancel the current game |
+
+## Stats tracking
+
+Your game results are saved automatically to a local SQLite database (`stats.db`).  
+The `/stats` command shows:
+
+- **Today / This week / This month** — games played, average score, best score
+- **All time** — total games, average, best game, most exact guesses in one game
+- **Trend** — whether your recent scores are improving, declining, or stable (needs 4+ games)
+
+`stats.db` is excluded from git — it stays on your machine only.
 
 ## Requirements
 
