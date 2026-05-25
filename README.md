@@ -1,5 +1,7 @@
 # Luck Bot
 
+🤖 **Try it live: [t.me/Luck_coach_bot](https://t.me/Luck_coach_bot)**
+
 A Telegram bot that tests your luck over 10 rounds. Each round the bot picks a random number between 1 and 10 — you guess, and your Luck Score reflects how close you were. Stats are saved locally so you can track your progress over time.
 
 ## How it works
