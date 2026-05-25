@@ -187,15 +187,9 @@ async def handle_guess(update: Update, context: ContextTypes.DEFAULT_TYPE):
     })
 
     if user_guess == secret:
-        result_text = (
-            f"✅ *Round {current_round}/10:* "
-            f"You guessed *{user_guess}* — PERFECT MATCH! (100%)"
-        )
+        result_text = f"✅ R{current_round}/10: *{user_guess}* = *{secret}* — PERFECT!"
     else:
-        result_text = (
-            f"🎲 *Round {current_round}/10:* "
-            f"You guessed *{user_guess}*, the number was *{secret}* — {round_luck:.0f}% close"
-        )
+        result_text = f"🎲 R{current_round}/10: *{user_guess}* → *{secret}* — {round_luck:.0f}%"
 
     try:
         await query.edit_message_text(result_text, parse_mode='Markdown')
