@@ -89,7 +89,7 @@ def get_stats(user_id: int) -> dict:
                 (user_id, month_ago)
             ),
             'all': q(
-                "SELECT COUNT(*), AVG(luck_score), MAX(luck_score), MAX(exact_matches) "
+                "SELECT COUNT(*), AVG(luck_score), MAX(luck_score), MAX(exact_matches), MIN(luck_score) "
                 "FROM games WHERE user_id=?",
                 (user_id,)
             ),
@@ -291,6 +291,7 @@ async def show_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"   Games played: {all_row[0]}\n"
         f"   Average score: {all_row[1]:.1f}%\n"
         f"   Best game: {all_row[2]:.1f}%\n"
+        f"   Worst game: {all_row[4]:.1f}%\n"
         f"   Most exact guesses: {all_row[3]}/10\n\n"
         f"📈 Trend: {trend}\n"
         f"Recent: {recent_str}\n\n"
