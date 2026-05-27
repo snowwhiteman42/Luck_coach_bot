@@ -5,6 +5,9 @@ copy.env
 # Stats database (local data, not for version control)
 stats.db
 
+# Bot logs
+logs/*.log
+
 # Python
 __pycache__/
 *.py[cod]
