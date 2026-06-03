@@ -24,13 +24,28 @@ Write-Log "Bot     : $BotScript"
 while ($true) {
     Write-Log "--- Starting bot ---"
     try {
+        $outFile = Join-Path $LogDir "out.tmp"
+        $errFile = Join-Path $LogDir "err.tmp"
+
         $p = Start-Process `
             -FilePath $PythonExe `
             -ArgumentList "`"$BotScript`"" `
             -WorkingDirectory $ProjectDir `
             -PassThru `
-            -NoNewWindow
+            -NoNewWindow `
+            -RedirectStandardOutput $outFile `
+            -RedirectStandardError  $errFile
+
         $p.WaitForExit()
+
+        # Append captured output to log
+        foreach ($f in @($outFile, $errFile)) {
+            if (Test-Path $f) {
+                Get-Content $f | ForEach-Object { Write-Log $_ }
+                Remove-Item $f
+            }
+        }
+
         Write-Log "Bot stopped (exit code $($p.ExitCode)). Restarting in 10 s..."
     } catch {
         Write-Log "Failed to start bot: $_. Retrying in 10 s..."
