@@ -6,6 +6,7 @@ $ProjectDir = Split-Path -Parent $ScriptDir
 $LogDir     = Join-Path $ProjectDir "logs"
 $LogFile    = Join-Path $LogDir "bot_runner.log"
 $BotScript  = Join-Path $ProjectDir "luck-bot.py"
+$PythonExe  = "C:\Python314\python.exe"
 
 if (-not (Test-Path $LogDir)) {
     New-Item -ItemType Directory -Path $LogDir | Out-Null
@@ -24,7 +25,7 @@ while ($true) {
     Write-Log "--- Starting bot ---"
     try {
         $p = Start-Process `
-            -FilePath "python" `
+            -FilePath $PythonExe `
             -ArgumentList "`"$BotScript`"" `
             -WorkingDirectory $ProjectDir `
             -PassThru `
