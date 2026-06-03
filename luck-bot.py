@@ -93,6 +93,7 @@ def get_stats(user_id: int) -> dict:
                 "FROM games WHERE user_id=?",
                 (user_id,)
             ),
+            # Last 10 individual games, most recent first
             'recent': [
                 r[0] for r in conn.execute(
                     "SELECT luck_score FROM games WHERE user_id=? "
@@ -100,12 +101,31 @@ def get_stats(user_id: int) -> dict:
                     (user_id,)
                 ).fetchall()
             ],
+            # Daily averages for the past 7 days, oldest first
+            'week_daily': [
+                r[0] for r in conn.execute(
+                    "SELECT AVG(luck_score) FROM games "
+                    "WHERE user_id=? AND date>=? "
+                    "GROUP BY date ORDER BY date ASC",
+                    (user_id, week_ago)
+                ).fetchall()
+            ],
+            # Daily averages for the past 30 days, oldest first
+            'month_daily': [
+                r[0] for r in conn.execute(
+                    "SELECT AVG(luck_score) FROM games "
+                    "WHERE user_id=? AND date>=? "
+                    "GROUP BY date ORDER BY date ASC",
+                    (user_id, month_ago)
+                ).fetchall()
+            ],
         }
 
 
 def trend_label(scores: list) -> str:
+    """scores = most-recent-first list."""
     if len(scores) < 4:
-        return "➡️ play more games to see your trend"
+        return "➡️ not enough data yet"
     recent = sum(scores[:3]) / 3
     older_slice = scores[3:3 + min(3, len(scores) - 3)]
     older = sum(older_slice) / len(older_slice)
@@ -115,6 +135,20 @@ def trend_label(scores: list) -> str:
     if diff < -3:
         return "📉 declining"
     return "➡️ stable"
+
+
+_BLOCKS = '▁▂▃▄▅▆▇█'
+
+def sparkline(scores: list) -> str:
+    """Convert scores (oldest first, 0-100) to a Unicode bar sparkline."""
+    if not scores:
+        return ''
+    lo, hi = min(scores), max(scores)
+    rng = hi - lo if hi != lo else 1
+    return ''.join(
+        _BLOCKS[round((s - lo) / rng * (len(_BLOCKS) - 1))]
+        for s in scores
+    )
 
 
 # --- GAME HANDLERS ---
@@ -278,24 +312,32 @@ async def show_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return f"{label}: —"
         return f"{label}: {count} game{'s' if count != 1 else ''} | Avg: {avg:.1f}% | Best: {best:.1f}%"
 
-    all_row      = stats['all']
-    trend        = trend_label(stats['recent'])
-    recent_str   = " → ".join(f"{s:.0f}%" for s in stats['recent'][:5])
+    all_row = stats['all']
+    trend   = trend_label(stats['recent'])
+
+    # Sparklines — all oldest→newest (left to right = time)
+    spark_games = sparkline(list(reversed(stats['recent'])))
+    spark_week  = sparkline(stats['week_daily'])
+    spark_month = sparkline(stats['month_daily'])
+
+    # Compact chart lines (only show if data exists)
+    chart_games = f"`{spark_games}` last {len(stats['recent'])} games\n" if spark_games else ""
+    chart_week  = f"`{spark_week}` daily avg\n"  if spark_week  else ""
+    chart_month = f"`{spark_month}` daily avg\n" if spark_month else ""
 
     text = (
         f"📊 *Luck Stats — {user.first_name}*\n\n"
         f"{fmt_row(stats['today'], '📅 Today')}\n"
-        f"{fmt_row(stats['week'],  '📆 This week')}\n"
-        f"{fmt_row(stats['month'], '🗓 This month')}\n\n"
-        f"🏆 *All Time*\n"
-        f"   Games played: {all_row[0]}\n"
-        f"   Average score: {all_row[1]:.1f}%\n"
-        f"   Best game: {all_row[2]:.1f}%\n"
-        f"   Worst game: {all_row[4]:.1f}%\n"
-        f"   Most exact guesses: {all_row[3]}/10\n\n"
-        f"📈 Trend: {trend}\n"
-        f"Recent: {recent_str}\n\n"
-        f"Type /start to play!"
+        f"{fmt_row(stats['week'],  '📆 Week')} \n"
+        f"{chart_week}"
+        f"{fmt_row(stats['month'], '🗓 Month')}\n"
+        f"{chart_month}"
+        f"\n🏆 *All Time*\n"
+        f"   Games: {all_row[0]} | Avg: {all_row[1]:.1f}%\n"
+        f"   Best: {all_row[2]:.1f}% | Worst: {all_row[4]:.1f}%\n"
+        f"   Most exact: {all_row[3]}/10\n\n"
+        f"{trend}  {chart_games}"
+        f"\n/start to play!"
     )
 
     await update.message.reply_text(text, parse_mode='Markdown')
