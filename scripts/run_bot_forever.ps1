@@ -29,7 +29,7 @@ while ($true) {
 
         $p = Start-Process `
             -FilePath $PythonExe `
-            -ArgumentList "`"$BotScript`"" `
+            -ArgumentList "-X utf8 `"$BotScript`"" `
             -WorkingDirectory $ProjectDir `
             -PassThru `
             -NoNewWindow `
