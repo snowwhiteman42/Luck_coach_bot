@@ -18,10 +18,28 @@ function Write-Log($Message) {
     "$ts  $Message" | Out-File -Append -FilePath $LogFile -Encoding UTF8
 }
 
+# Also set in PS environment so inline calls inherit it
+$env:PYTHONPATH       = $PythonPkgs
+$env:PYTHONIOENCODING = 'utf-8'
+
 Write-Log "=== Watchdog started ==="
 Write-Log "Project : $ProjectDir"
 Write-Log "Python  : $PythonExe"
 Write-Log "Pkgs    : $PythonPkgs"
+
+# --- PRE-FLIGHT: verify Python and packages are reachable ---
+$prefly = & $PythonExe -X utf8 -c @"
+import sys, os
+print('Python:', sys.version[:10])
+print('PYTHONPATH:', os.environ.get('PYTHONPATH','(not set)'))
+try:
+    import dotenv, telegram
+    print('Imports: OK')
+except Exception as e:
+    print('Imports: FAIL -', e)
+"@ 2>&1
+Write-Log "Pre-flight: $($prefly -join ' | ')"
+# -----------------------------------------------------------
 
 while ($true) {
     Write-Log "--- Starting bot ---"
