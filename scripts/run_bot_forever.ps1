@@ -17,9 +17,13 @@ function Write-Log($Message) {
     "$ts  $Message" | Out-File -Append -FilePath $LogFile -Encoding utf8
 }
 
+# Point Python to the user-installed packages (SYSTEM can read this path)
+$env:PYTHONPATH = "C:\Users\Ilia\AppData\Roaming\Python\Python314\site-packages"
+
 Write-Log "=== Watchdog started ==="
 Write-Log "Project : $ProjectDir"
 Write-Log "Bot     : $BotScript"
+Write-Log "Pkgs    : $env:PYTHONPATH"
 
 while ($true) {
     Write-Log "--- Starting bot ---"
