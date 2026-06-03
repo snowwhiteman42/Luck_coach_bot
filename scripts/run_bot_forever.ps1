@@ -45,7 +45,7 @@ while ($true) {
         # Append captured output to log
         foreach ($f in @($outFile, $errFile)) {
             if (Test-Path $f) {
-                Get-Content $f | ForEach-Object { Write-Log $_ }
+                Get-Content $f -Encoding UTF8 | ForEach-Object { Write-Log $_ }
                 Remove-Item $f
             }
         }
